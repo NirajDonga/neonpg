@@ -1,4 +1,4 @@
-module github.com/NirajDonga/neonpg
+module github.com/NirajDonga/dbpods
 
 go 1.25.0
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/NirajDonga/neonpg/internal/core"
+	"github.com/NirajDonga/dbpods/internal/core"
 )
 
 type APIHandler struct {

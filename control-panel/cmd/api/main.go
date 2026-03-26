@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/NirajDonga/neonpg/internal/config"
-	"github.com/NirajDonga/neonpg/internal/handler"
-	"github.com/NirajDonga/neonpg/internal/k8s"
-	"github.com/NirajDonga/neonpg/internal/proxy"
+	"github.com/NirajDonga/dbpods/internal/config"
+	"github.com/NirajDonga/dbpods/internal/handler"
+	"github.com/NirajDonga/dbpods/internal/k8s"
+	"github.com/NirajDonga/dbpods/internal/proxy"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
