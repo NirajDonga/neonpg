@@ -8,6 +8,7 @@ import (
 
 	"github.com/NirajDonga/dbpods/internal/config"
 	"github.com/NirajDonga/dbpods/internal/repository"
+	"github.com/NirajDonga/dbpods/internal/utils"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -35,14 +36,11 @@ func NewAuthHandler(cfg *config.AppConfig, userRepo *repository.UserRepository) 
 	return &AuthHandler{cfg: cfg, userRepo: userRepo, oauthConfig: oauthConfig}
 }
 
-// GoogleLogin redirects the user to Google's OAuth consent page.
 func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	url := h.oauthConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-// GoogleCallback handles the OAuth callback from Google.
-// It exchanges the code for a token, fetches user info, and finds or creates the user.
 func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 	code := c.Query("code")
 	if code == "" {
@@ -56,7 +54,6 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	// Fetch user info from Google.
 	client := h.oauthConfig.Client(context.Background(), token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
 	if err != nil {
@@ -79,10 +76,8 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	// Find or create the user in our database.
 	user, err := h.userRepo.GetByOAuthID(ctx, userInfo.Sub)
 	if err != nil {
-		// User not found — provision a new user entry.
 		user, err = h.userRepo.Create(ctx, userInfo.Email, userInfo.Sub)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
@@ -90,5 +85,15 @@ func (h *AuthHandler) GoogleCallback(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	jwtToken, err := utils.GenerateToken(user.ID, h.cfg.JWTSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate authentication token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "login successful",
+		"token":   jwtToken,
+		"user":    user,
+	})
 }
