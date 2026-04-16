@@ -1,20 +1,18 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
-	"time"
 
-	"github.com/NirajDonga/dbpods/internal/repository"
+	"github.com/NirajDonga/dbpods/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
 type PodHandler struct {
-	podRepo *repository.PodRepository
+	podService *services.PodService
 }
 
-func NewPodHandler(podRepo *repository.PodRepository) *PodHandler {
-	return &PodHandler{podRepo: podRepo}
+func NewPodHandler(podService *services.PodService) *PodHandler {
+	return &PodHandler{podService: podService}
 }
 
 func (h *PodHandler) CreatePod(c *gin.Context) {
@@ -25,17 +23,18 @@ func (h *PodHandler) CreatePod(c *gin.Context) {
 	}
 	userID := userIDRaw.(int)
 
-	tenantID := fmt.Sprintf("tenant-db-%d-%d", userID, time.Now().Unix())
-
-	pod, err := h.podRepo.Create(c.Request.Context(), userID, tenantID)
+	// Delegate all complex logic to the Service Layer
+	pod, connString, password, err := h.podService.ProvisionDatabase(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create pod in database"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "pod created successfully",
-		"pod":     pod,
+		"message":           "pod created successfully",
+		"pod":               pod,
+		"connection_string": connString,
+		"password":          password,
 	})
 }
 
@@ -47,7 +46,7 @@ func (h *PodHandler) GetUserPods(c *gin.Context) {
 	}
 	userID := userIDRaw.(int)
 
-	pods, err := h.podRepo.GetByUserID(c.Request.Context(), userID)
+	pods, err := h.podService.GetUserPods(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch pods"})
 		return

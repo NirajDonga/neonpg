@@ -10,6 +10,7 @@ import (
 	"github.com/NirajDonga/dbpods/internal/handlers"
 	"github.com/NirajDonga/dbpods/internal/middleware"
 	"github.com/NirajDonga/dbpods/internal/repository"
+	"github.com/NirajDonga/dbpods/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,12 +25,14 @@ func main() {
 	}
 	defer pool.Close()
 
-	// Wire up repositories and handlers.
 	userRepo := repository.NewUserRepository(pool)
 	podRepo := repository.NewPodRepository(pool)
 
+	podService := services.NewPodService(podRepo)
+
+	// Wire up handlers
 	authHandler := handlers.NewAuthHandler(cfg, userRepo)
-	podHandler := handlers.NewPodHandler(podRepo)
+	podHandler := handlers.NewPodHandler(podService)
 
 	r := gin.Default()
 
