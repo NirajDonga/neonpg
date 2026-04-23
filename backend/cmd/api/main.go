@@ -12,6 +12,7 @@ import (
 	"github.com/NirajDonga/dbpods/internal/middleware"
 	"github.com/NirajDonga/dbpods/internal/repository"
 	"github.com/NirajDonga/dbpods/internal/services"
+	"github.com/NirajDonga/dbpods/internal/worker"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,6 +36,10 @@ func main() {
 	}
 
 	podService := services.NewPodService(podRepo, k8sClient)
+
+	// Start the background cleanup worker
+	cleanupWorker := worker.NewCleanupWorker(podRepo, k8sClient)
+	go cleanupWorker.Start(ctx)
 
 	// Wire up handlers
 	authHandler := handlers.NewAuthHandler(cfg, userRepo)
