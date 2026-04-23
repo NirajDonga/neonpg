@@ -8,6 +8,7 @@ import (
 	"github.com/NirajDonga/dbpods/internal/config"
 	database "github.com/NirajDonga/dbpods/internal/db"
 	"github.com/NirajDonga/dbpods/internal/handlers"
+	"github.com/NirajDonga/dbpods/internal/kubernetes"
 	"github.com/NirajDonga/dbpods/internal/middleware"
 	"github.com/NirajDonga/dbpods/internal/repository"
 	"github.com/NirajDonga/dbpods/internal/services"
@@ -28,7 +29,12 @@ func main() {
 	userRepo := repository.NewUserRepository(pool)
 	podRepo := repository.NewPodRepository(pool)
 
-	podService := services.NewPodService(podRepo)
+	k8sClient, err := kubernetes.NewClient(cfg.KubeConfig, cfg.Namespace)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes client: %v", err)
+	}
+
+	podService := services.NewPodService(podRepo, k8sClient)
 
 	// Wire up handlers
 	authHandler := handlers.NewAuthHandler(cfg, userRepo)

@@ -15,6 +15,7 @@ type AppConfig struct {
 	GoogleClientSecret string
 	GoogleCallbackURL  string
 	JWTSecret          string
+	KubeConfig         string
 }
 
 func LoadConfig() *AppConfig {
@@ -28,6 +29,7 @@ func LoadConfig() *AppConfig {
 		GoogleClientSecret: mustGetEnv("GOOGLE_CLIENT_SECRET"),
 		GoogleCallbackURL:  mustGetEnv("GOOGLE_CALLBACK_URL"),
 		JWTSecret:          mustGetEnv("JWT_SECRET"),
+		KubeConfig:         mustGetEnv("KUBECONFIG"),
 	}
 }
 
